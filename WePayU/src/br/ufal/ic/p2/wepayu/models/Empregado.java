@@ -5,14 +5,12 @@ public class Empregado {
     private String nome;
     private String endereco;
     private String tipo;
-    private double salario;
 
     public Empregado(){}
-    public Empregado(String nome, String endereco, String tipo, double salario){
+    public Empregado(String nome, String endereco, String tipo){
         this.nome = nome;
         this.endereco = endereco;
         this.tipo = tipo;
-        this.salario = salario;
     }
 
     public String getNome() {
@@ -27,20 +25,12 @@ public class Empregado {
         return tipo;
     }
 
-    public double getSalario() {
-        return salario;
-    }
-
     public void setNome(String nome) {
         this.nome = nome;
     }
 
     public void setEndereco(String endereco) {
         this.endereco = endereco;
-    }
-
-    public void setSalario(double salario) {
-        this.salario = salario;
     }
 
     public void setTipo(String tipo) {

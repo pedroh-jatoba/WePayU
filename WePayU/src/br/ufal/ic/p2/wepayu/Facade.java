@@ -2,7 +2,10 @@ package br.ufal.ic.p2.wepayu;
 
 import br.ufal.ic.p2.wepayu.Exception.*;
 import br.ufal.ic.p2.wepayu.models.Empregado;
+import br.ufal.ic.p2.wepayu.models.EmpregadoAssalariado;
 import br.ufal.ic.p2.wepayu.models.EmpregadoComissionado;
+import br.ufal.ic.p2.wepayu.models.EmpregadoHorista;
+
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.*;
@@ -11,7 +14,11 @@ import java.util.*;
 public class Facade {
     private Map<String, Empregado> empregados = new LinkedHashMap<>();
     private int contadorId = 1;
-
+/**
+ * Construtor Facade()
+ * Abre o Arquivo banco.xml
+ * Passa o que está no arquivo para o Map empregados
+*/
     public Facade() {
         try{
             File banco = new File("banco.xml");
@@ -27,7 +34,14 @@ public class Facade {
             }
         }catch (Exception e){}
     }
-
+/**
+ * getEmpregadoPorNome:
+ * Pega o nome e o id do empregado
+ * Passa para o id para inteiro
+ * Procura o nome no Map empregados
+ * Se o índice do Map bater com o índice que foi solicitado, retorna a chave para acessar o objeto empregado
+ * Se não acha, solta a exceção: Empregado não encontrado.
+ */
     public String getEmpregadoPorNome (String nome, String indice) throws EmpregadoNaoExisteException {
 
         int i = Integer.parseInt(indice);
@@ -44,7 +58,13 @@ public class Facade {
         }
         throw new EmpregadoNaoEncontrado();
     }
-
+    /** getAtributoEmpregado
+     * Pega o id do empregado e o atributo solicitado
+     * Se o id é nulo, solta a exceção de id nulo
+     * Se o id não aponta para um empregado existente, solta a exceção de empregado não existe
+     * Mostra o atributo de acordo com o que foi pedido.
+     * Se o atributo solicitado não existe, solta a exceção de atributo inexistente
+     * */
     public String getAtributoEmpregado(String e, String atributo) throws Exception {
         if (e == null || e.isEmpty()) {
             throw new IdNulo();
@@ -64,7 +84,18 @@ public class Facade {
         } else if (atributo.equals("sindicalizado")) {
             return "false";
         } else if (atributo.equals("salario")) {
-            String salarioFormatado = String.format("%.2f", empregado.getSalario());
+            String salarioFormatado;
+            if(empregado.getTipo().equals("horista")) {
+                EmpregadoHorista horista = (EmpregadoHorista) empregado;
+                salarioFormatado = String.format("%.2f", horista.getSalarioPorHora());
+            }else if(empregado.getTipo().equals("assalariado")){
+                EmpregadoAssalariado assalariado = (EmpregadoAssalariado) empregado;
+                salarioFormatado = String.format("%.2f", assalariado.getSalarioMensal());
+            }
+            else{
+                EmpregadoComissionado comissionado = (EmpregadoComissionado) empregado;
+                salarioFormatado = String.format("%.2f", comissionado.getSalarioMensal());
+            }
             return salarioFormatado.replace(".", ",");
         } else if (atributo.equals("comissao")) {
             if (empregado instanceof EmpregadoComissionado) {
@@ -78,13 +109,21 @@ public class Facade {
         }
         throw new AtributoInexistente();
     }
-
+/**
+ * zerarSistema
+ * Limpa o Map empregados
+ * Volta o contador de ids para 1
+ * Apaga o arquivo banco.xml
+ */
     public void zerarSistema() {
         empregados.clear();
         contadorId = 1;
         new File("banco.xml").delete();
     }
-
+/**
+ * encerrarSistema()
+ * reescreve o arquivo banco.xml com o Map empregados e com o valor do contador
+ */
     public void encerrarSistema(){
         try {
             FileOutputStream f = new FileOutputStream("banco.xml");
@@ -99,6 +138,36 @@ public class Facade {
             e.printStackTrace();
         }
     }
+/**
+ * removerEmpregado()
+ * Verifica se o id é nulo ou vazio
+ * Verifica se o id aponta para um empregado existente
+ * Remove o empregado
+ */
+    public void removerEmpregado (String i) throws Exception{
+        if(i ==  null || i.isEmpty()){
+            throw new IdNulo();
+        }
+        if(!empregados.containsKey(i)){
+            throw new EmpregadoNaoExisteException();
+        }
+
+        empregados.remove(i);
+    }
+/**
+ * criarEmpregado(Com 4 atributos)
+ * Função que cria o objeto empregado de tipo horário ou assalariado
+ * Verifica nulidade de nome, salário e endereço
+ * Verifica se o tipo existe
+ * Verifica se o empregado não é comissionado (se for comissionado, deveria ser passado o atributo comissão)
+ * Verifiva se a string salário é um número
+ * Verifica se salario não é negativo
+ * Gera a chave para acessar o empregado no map
+ * Se tipo = "horista", cria o objeto empregado horista e o joga no Map
+ * Senão, cria objeto empregado assalariado e joga no map
+ * Joga o objeto empregado no map
+ * Retorna o id do empregado criado
+ */
     public String criarEmpregado(String nome, String endereco, String tipo, String salario) throws Exception {
         if(nome == null || nome.isEmpty()) {
             throw new NomeNulo();
@@ -125,13 +194,31 @@ public class Facade {
 
         // GErrar ID
         String id = String.valueOf(contadorId++);
-        Empregado novo = new Empregado(nome, endereco, tipo, salarioConvertido);
-
-        empregados.put(id, novo);
+        if(tipo.equals("horista")){
+            EmpregadoHorista novo = new EmpregadoHorista(nome, endereco, salarioConvertido);
+            empregados.put(id, novo);
+        } else {
+            EmpregadoAssalariado novo = new EmpregadoAssalariado(nome, endereco, salarioConvertido);
+            empregados.put(id, novo);
+        }
 
         return id;
     }
-
+    /**
+     * criarEmpregado(Com 5 atributos)
+     * Função que cria o objeto empregado de tipo comissionado
+     * Verifica nulidade de nome, salário, comissão e endereço
+     * Verifica se o tipo existe
+     * Verifica se o empregado não é horrário ou assalariado
+     * Verifiva se a string salário é um número
+     * Verifica se salario não é negativo
+     * Verifiva se a string comissão é um número
+     * Verifica se comissão não é negativa
+     * Gera a chave para acessar o empregado no map
+     * Cria o objeto empregadoComissionado
+     * Joga o objeto empregadoComissionado no map
+     * Retorna o id do empregado criado
+     */
     public String criarEmpregado(String nome, String endereco, String tipo, String salario, String comissao) throws Exception {
         if(nome == null || nome.isEmpty()) {
             throw new NomeNulo();
@@ -169,7 +256,7 @@ public class Facade {
             throw new ComissaoNegativa();
         }
         String id = String.valueOf(contadorId++);
-        Empregado novo = new EmpregadoComissionado(nome, endereco, tipo, salarioConvertido, comissaoConvertida);
+        EmpregadoComissionado novo = new EmpregadoComissionado(nome, endereco, salarioConvertido, comissaoConvertida);
 
         empregados.put(id, novo);
 

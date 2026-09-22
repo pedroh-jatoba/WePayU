@@ -2,93 +2,22 @@
 <java version="19.0.2" class="java.beans.XMLDecoder">
  <object class="java.util.LinkedHashMap">
   <void method="put">
-   <string>1</string>
-   <object class="br.ufal.ic.p2.wepayu.models.Empregado">
-    <void property="endereco">
-     <string>Rua dos Jooes, 333 - Campina Grande</string>
-    </void>
-    <void property="nome">
-     <string>Joao da Silva</string>
-    </void>
-    <void property="salario">
-     <double>23.0</double>
-    </void>
-    <void property="tipo">
-     <string>horista</string>
-    </void>
-   </object>
-  </void>
-  <void method="put">
    <string>2</string>
-   <object class="br.ufal.ic.p2.wepayu.models.Empregado">
+   <object class="br.ufal.ic.p2.wepayu.models.EmpregadoHorista">
     <void property="endereco">
      <string>Rua dos Jooes, 333 - Campina Grande</string>
     </void>
     <void property="nome">
-     <string>Joao da Silva</string>
+     <string>Maria</string>
     </void>
-    <void property="salario">
+    <void property="salarioPorHora">
      <double>23.0</double>
     </void>
     <void property="tipo">
      <string>horista</string>
-    </void>
-   </object>
-  </void>
-  <void method="put">
-   <string>3</string>
-   <object class="br.ufal.ic.p2.wepayu.models.Empregado">
-    <void property="endereco">
-     <string>Rua dos Jooes, 333 - Campina Grande</string>
-    </void>
-    <void property="nome">
-     <string>Joao da Silva</string>
-    </void>
-    <void property="salario">
-     <double>23.32</double>
-    </void>
-    <void property="tipo">
-     <string>horista</string>
-    </void>
-   </object>
-  </void>
-  <void method="put">
-   <string>4</string>
-   <object class="br.ufal.ic.p2.wepayu.models.Empregado">
-    <void property="endereco">
-     <string>Rua das Marias, 333 - Campina Grande</string>
-    </void>
-    <void property="nome">
-     <string>Mariazinha</string>
-    </void>
-    <void property="salario">
-     <double>2300.45</double>
-    </void>
-    <void property="tipo">
-     <string>assalariado</string>
-    </void>
-   </object>
-  </void>
-  <void method="put">
-   <string>5</string>
-   <object class="br.ufal.ic.p2.wepayu.models.EmpregadoComissionado">
-    <void property="comissao">
-     <double>0.05</double>
-    </void>
-    <void property="endereco">
-     <string>Rua dos Bufoes, 333 - Campina Grande</string>
-    </void>
-    <void property="nome">
-     <string>Gaiato Vendedor</string>
-    </void>
-    <void property="salario">
-     <double>2300.45</double>
-    </void>
-    <void property="tipo">
-     <string>comissionado</string>
     </void>
    </object>
   </void>
  </object>
- <int>6</int>
+ <int>3</int>
 </java>
