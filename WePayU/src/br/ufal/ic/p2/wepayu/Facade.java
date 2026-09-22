@@ -1,34 +1,56 @@
 package br.ufal.ic.p2.wepayu;
 
-import br.ufal.ic.p2.wepayu.Exception.EmpregadoNaoExisteException;
-import br.ufal.ic.p2.wepayu.Exception.NomeNulo;
-import br.ufal.ic.p2.wepayu.Exception.AtributoInexistente;
-import br.ufal.ic.p2.wepayu.Exception.ComissaoNula;
-import br.ufal.ic.p2.wepayu.Exception.ComissaoNegativa;
-import br.ufal.ic.p2.wepayu.Exception.ComissaoNaoNumerica;
-import br.ufal.ic.p2.wepayu.Exception.EnderecoNulo;
-import br.ufal.ic.p2.wepayu.Exception.IdNulo;
-import br.ufal.ic.p2.wepayu.Exception.SalarioNaoNumerico;
-import br.ufal.ic.p2.wepayu.Exception.SalarioNegativo;
-import br.ufal.ic.p2.wepayu.Exception.SalarioNulo;
-import br.ufal.ic.p2.wepayu.Exception.TipoInvalido;
-import br.ufal.ic.p2.wepayu.Exception.TipoNaoAplicavel;
+import br.ufal.ic.p2.wepayu.Exception.*;
 import br.ufal.ic.p2.wepayu.models.Empregado;
 import br.ufal.ic.p2.wepayu.models.EmpregadoComissionado;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
+import java.io.*;
+import java.util.*;
 
 public class Facade {
-    public String getAtributoEmpregado(String emp, String atributo) throws Exception {
+    private Map<String, Empregado> empregados = new LinkedHashMap<>();
+    private int contadorId = 1;
 
-        if (emp == null || emp.isEmpty()) {
+    public Facade() {
+        try{
+            File banco = new File("banco.xml");
+            if (banco.exists()) {
+                FileInputStream f = new FileInputStream(banco);
+                XMLDecoder decoder = new XMLDecoder(f);
+
+                this.empregados = (Map<String, Empregado>) decoder.readObject();
+                this.contadorId = (int) decoder.readObject();
+
+                decoder.close();
+                f.close();
+            }
+        }catch (Exception e){}
+    }
+
+    public String getEmpregadoPorNome (String nome, String indice) throws EmpregadoNaoExisteException {
+
+        int i = Integer.parseInt(indice);
+        int cont = 0;
+
+        for (Map.Entry<String, Empregado> entrada : empregados.entrySet()) {
+            Empregado e = entrada.getValue();
+            if(e.getNome().equals(nome)){
+                cont++;
+                if(cont == i){
+                    return entrada.getKey();
+                }
+            }
+        }
+        throw new EmpregadoNaoEncontrado();
+    }
+
+    public String getAtributoEmpregado(String e, String atributo) throws Exception {
+        if (e == null || e.isEmpty()) {
             throw new IdNulo();
         }
 
-        Empregado empregado = empregados.get(emp);
+        Empregado empregado = empregados.get(e);
         if (empregado == null) {
             throw new EmpregadoNaoExisteException();
         }
@@ -40,10 +62,8 @@ public class Facade {
         } else if (atributo.equals("tipo")) {
             return empregado.getTipo();
         } else if (atributo.equals("sindicalizado")) {
-            // No ficheiro us1, todos nascem sem sindicato.
             return "false";
         } else if (atributo.equals("salario")) {
-            // O teste é chato: quer o valor com vírgula e 2 casas decimais (ex: 23,00)
             String salarioFormatado = String.format("%.2f", empregado.getSalario());
             return salarioFormatado.replace(".", ",");
         } else if (atributo.equals("comissao")) {
@@ -53,25 +73,32 @@ public class Facade {
                 return comissaoFormatada.replace(".", ",");
 
             } else {
-                // Se o teste tentar puxar a comissão de um Horista ou Assalariado,
-                // o atributo tecnicamente não existe para eles.
                 throw new AtributoInexistente();
             }
         }
-
-        // 3. Se o teste pedir um atributo que não mapeámos (Resolve o erro da linha 86)
-        throw new AtributoInexistente(); // "Atributo nao existe."
+        throw new AtributoInexistente();
     }
-
-    private Map<String, Empregado> empregados = new HashMap<>();
-    private int contadorId = 1;
 
     public void zerarSistema() {
         empregados.clear();
         contadorId = 1;
+        new File("banco.xml").delete();
     }
 
-    public void encerrarSistema(){}
+    public void encerrarSistema(){
+        try {
+            FileOutputStream f = new FileOutputStream("banco.xml");
+            XMLEncoder encoder = new XMLEncoder(f);
+
+            encoder.writeObject(this.empregados);
+            encoder.writeObject(this.contadorId);
+
+            encoder.close();
+            f.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     public String criarEmpregado(String nome, String endereco, String tipo, String salario) throws Exception {
         if(nome == null || nome.isEmpty()) {
             throw new NomeNulo();
