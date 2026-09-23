@@ -2,13 +2,67 @@
 <java version="19.0.2" class="java.beans.XMLDecoder">
  <object class="java.util.LinkedHashMap">
   <void method="put">
-   <string>2</string>
-   <object class="br.ufal.ic.p2.wepayu.models.EmpregadoHorista">
+   <string>1</string>
+   <object class="br.ufal.ic.p2.wepayu.models.EmpregadoHorista" id="EmpregadoHorista0">
+    <void property="cartoes">
+     <void method="add">
+      <object class="br.ufal.ic.p2.wepayu.models.CartaoDePonto">
+       <void property="data">
+        <string>1/1/2005</string>
+       </void>
+       <void property="empregado">
+        <string>1</string>
+       </void>
+       <void property="horas">
+        <double>8.0</double>
+       </void>
+      </object>
+     </void>
+     <void method="add">
+      <object class="br.ufal.ic.p2.wepayu.models.CartaoDePonto">
+       <void property="data">
+        <string>2/1/2005</string>
+       </void>
+       <void property="empregado">
+        <string>1</string>
+       </void>
+       <void property="horas">
+        <double>8.5</double>
+       </void>
+      </object>
+     </void>
+     <void method="add">
+      <object class="br.ufal.ic.p2.wepayu.models.CartaoDePonto">
+       <void property="data">
+        <string>3/1/2005</string>
+       </void>
+       <void property="empregado">
+        <string>1</string>
+       </void>
+       <void property="horas">
+        <double>9.0</double>
+       </void>
+      </object>
+     </void>
+     <void method="add">
+      <object class="br.ufal.ic.p2.wepayu.models.CartaoDePonto">
+       <void property="data">
+        <string>4/1/2005</string>
+       </void>
+       <void property="empregado">
+        <string>1</string>
+       </void>
+       <void property="horas">
+        <double>6.0</double>
+       </void>
+      </object>
+     </void>
+    </void>
     <void property="endereco">
      <string>Rua dos Jooes, 333 - Campina Grande</string>
     </void>
     <void property="nome">
-     <string>Maria</string>
+     <string>Joao da Silva</string>
     </void>
     <void property="salarioPorHora">
      <double>23.0</double>
@@ -18,6 +72,75 @@
     </void>
    </object>
   </void>
+  <void method="put">
+   <string>2</string>
+   <object class="br.ufal.ic.p2.wepayu.models.EmpregadoHorista" id="EmpregadoHorista1">
+    <void property="cartoes">
+     <void method="add">
+      <object class="br.ufal.ic.p2.wepayu.models.CartaoDePonto">
+       <void property="data">
+        <string>3/1/2005</string>
+       </void>
+       <void property="empregado">
+        <string>2</string>
+       </void>
+       <void property="horas">
+        <double>10.0</double>
+       </void>
+      </object>
+     </void>
+    </void>
+    <void property="endereco">
+     <string>Rua das Marias, 333 - Campina Grande</string>
+    </void>
+    <void property="nome">
+     <string>Mariazinha</string>
+    </void>
+    <void property="salarioPorHora">
+     <double>2300.0</double>
+    </void>
+    <void property="tipo">
+     <string>horista</string>
+    </void>
+   </object>
+  </void>
+  <void method="put">
+   <string>3</string>
+   <object class="br.ufal.ic.p2.wepayu.models.EmpregadoComissionado">
+    <void property="comissao">
+     <double>0.05</double>
+    </void>
+    <void property="endereco">
+     <string>Rua dos Bufoes, 333 - Campina Grande</string>
+    </void>
+    <void property="nome">
+     <string>Gaiato Vendedor</string>
+    </void>
+    <void property="salarioMensal">
+     <double>1300.0</double>
+    </void>
+    <void property="tipo">
+     <string>comissionado</string>
+    </void>
+   </object>
+  </void>
+  <void method="put">
+   <string>4</string>
+   <object class="br.ufal.ic.p2.wepayu.models.EmpregadoAssalariado">
+    <void property="endereco">
+     <string>Rua das Marias, 333 - Campina Grande</string>
+    </void>
+    <void property="nome">
+     <string>Gorete</string>
+    </void>
+    <void property="salarioMensal">
+     <double>2300.0</double>
+    </void>
+    <void property="tipo">
+     <string>assalariado</string>
+    </void>
+   </object>
+  </void>
  </object>
- <int>3</int>
+ <int>5</int>
 </java>

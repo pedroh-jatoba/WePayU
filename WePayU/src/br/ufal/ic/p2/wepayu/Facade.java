@@ -5,10 +5,13 @@ import br.ufal.ic.p2.wepayu.models.Empregado;
 import br.ufal.ic.p2.wepayu.models.EmpregadoAssalariado;
 import br.ufal.ic.p2.wepayu.models.EmpregadoComissionado;
 import br.ufal.ic.p2.wepayu.models.EmpregadoHorista;
+import br.ufal.ic.p2.wepayu.models.CartaoDePonto;
 
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.*;
+import java.time.LocalDate;
+import java.time.format.*;
 import java.util.*;
 
 public class Facade {
@@ -33,6 +36,32 @@ public class Facade {
                 f.close();
             }
         }catch (Exception e){}
+    }
+
+    /**
+     * Formatador de data
+     * @param dataStr
+     * @return
+     * @throws Exception
+     */
+    private LocalDate converterData(String dataStr) throws Exception {
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(java.time.format.ResolverStyle.STRICT);
+            return LocalDate.parse(dataStr, formatter);
+        } catch (DateTimeParseException e) {
+            throw new DataInvalida();
+        }
+    }
+
+    /**
+     * verifica se o id é nulo
+     * @param id
+     */
+    private void verificaIdNulo(String id)
+    {
+        if(id == null || id.isEmpty()){
+            throw new IdNulo();
+        }
     }
 /**
  * getEmpregadoPorNome:
@@ -109,6 +138,84 @@ public class Facade {
         }
         throw new AtributoInexistente();
     }
+
+    /**
+     * getHorasNormaisTrabalhadas():
+     * Passa a data inicial e a data final para um objeto LocalDate
+     * Verifica ID do empregado
+     * A partir do ID do empregado, acessa o Metodo getHorasNormaisTrabalhadas da classe EmpregadoHorista
+     * Pega o valor em double que o metodo retorna e formata para passar no teste
+     * @param emp
+     * @param dataInicial
+     * @param dataFinal
+     * @return
+     */
+    public String getHorasNormaisTrabalhadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(java.time.format.ResolverStyle.STRICT);
+        LocalDate inicio;
+        LocalDate fim;
+        try {
+            inicio = LocalDate.parse(dataInicial, formatter);
+        } catch (DateTimeParseException e) {
+            throw new DataInicialInvalida();
+        }
+        try {
+            fim = LocalDate.parse(dataFinal, formatter);
+        } catch (DateTimeParseException e) {
+            throw new DataFinalInvalida();
+        }
+        verificaIdNulo(emp);
+        if(!empregados.containsKey(emp)){
+            throw new EmpregadoNaoExisteException();
+        }
+        if(!empregados.get(emp).getTipo().equals("horista")){
+            throw new EmpregadoNaoHorista();
+        }
+        EmpregadoHorista e = (EmpregadoHorista) empregados.get(emp);
+        double horasTrabalhadas = e.getHorasNormaisTrabalhadas(inicio, fim);
+        if (horasTrabalhadas == (long) horasTrabalhadas) {
+            return String.valueOf((long) horasTrabalhadas);
+        } else {
+            return String.valueOf(horasTrabalhadas).replace(".", ",");
+        }
+    }
+    /**
+     * getHorasExtrasTrabalhadas():
+     * Passa a data inicial e a data final para um objeto LocalDate
+     * Verifica ID do empregado
+     * A partir do ID do empregado, acessa o Metodo getHorasExtrasTrabalhadas da classe EmpregadoHorista
+     * Pega o valor em double que o metodo retorna e formata para passar no teste
+     * @param emp
+     * @param dataInicial
+     * @param dataFinal
+     * @return
+     */
+    public String getHorasExtrasTrabalhadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(java.time.format.ResolverStyle.STRICT);
+        LocalDate inicio;
+        LocalDate fim;
+        try {
+            inicio = LocalDate.parse(dataInicial, formatter);
+        } catch (DateTimeParseException e) {
+            throw new DataInicialInvalida();
+        }
+        try {
+            fim = LocalDate.parse(dataFinal, formatter);
+        } catch (DateTimeParseException e) {
+            throw new DataFinalInvalida();
+        }
+        verificaIdNulo(emp);
+        if(!empregados.containsKey(emp)){
+            throw new EmpregadoNaoExisteException();
+        }
+        EmpregadoHorista e = (EmpregadoHorista) empregados.get(emp);
+        double horasTrabalhadas = e.getHorasExtrasTrabalhadas(inicio, fim);
+        if (horasTrabalhadas == (long) horasTrabalhadas) {
+            return String.valueOf((long) horasTrabalhadas);
+        } else {
+            return String.valueOf(horasTrabalhadas).replace(".", ",");
+        }
+    }
 /**
  * zerarSistema
  * Limpa o Map empregados
@@ -153,6 +260,44 @@ public class Facade {
         }
 
         empregados.remove(i);
+    }
+
+    /**
+     * @param empregado
+     * @param data
+     * @param horas
+     * @throws Exception
+     * Vê se empregado é uma chave para o Map empregados
+     * Cria um cartão de ponto
+     * Adiciona o cartao na lista
+     */
+    public void lancaCartao(String empregado, String data, String horas) throws Exception{
+        if(empregado == null || empregado.isEmpty()){
+            throw new IdNulo();
+        }
+
+        if(!empregados.containsKey(empregado)){
+            throw new EmpregadoNaoExisteException();
+        }
+
+        if(!empregados.get(empregado).getTipo().equals("horista")){
+            throw new EmpregadoNaoHorista();
+        }
+
+        double horasConvertidas;
+        try {
+            horasConvertidas = Double.parseDouble(horas.replace(",", "."));
+        } catch (NumberFormatException e) {
+            throw new HorasNegativas();
+        }
+
+        if (horasConvertidas <= 0) {
+            throw new HorasNegativas();
+        }
+        converterData(data);
+        EmpregadoHorista h = (EmpregadoHorista) empregados.get(empregado);
+        CartaoDePonto c = new CartaoDePonto(empregado, data, Double.parseDouble(horas.replace(",", ".")));
+        h.adicionarCartao(c);
     }
 /**
  * criarEmpregado(Com 4 atributos)
@@ -205,6 +350,13 @@ public class Facade {
         return id;
     }
     /**
+     * @param nome
+     * @param endereco
+     * @param tipo
+     * @param salario
+     * @param comissao
+     * @return
+     * @throws Exception
      * criarEmpregado(Com 5 atributos)
      * Função que cria o objeto empregado de tipo comissionado
      * Verifica nulidade de nome, salário, comissão e endereço
