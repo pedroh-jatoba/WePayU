@@ -1,11 +1,7 @@
 package br.ufal.ic.p2.wepayu;
 
 import br.ufal.ic.p2.wepayu.Exception.*;
-import br.ufal.ic.p2.wepayu.models.Empregado;
-import br.ufal.ic.p2.wepayu.models.EmpregadoAssalariado;
-import br.ufal.ic.p2.wepayu.models.EmpregadoComissionado;
-import br.ufal.ic.p2.wepayu.models.EmpregadoHorista;
-import br.ufal.ic.p2.wepayu.models.CartaoDePonto;
+import br.ufal.ic.p2.wepayu.models.*;
 
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
@@ -208,6 +204,9 @@ public class Facade {
         if(!empregados.containsKey(emp)){
             throw new EmpregadoNaoExisteException();
         }
+        if(!empregados.get(emp).getTipo().equals("horista")){
+            throw new EmpregadoNaoHorista();
+        }
         EmpregadoHorista e = (EmpregadoHorista) empregados.get(emp);
         double horasTrabalhadas = e.getHorasExtrasTrabalhadas(inicio, fim);
         if (horasTrabalhadas == (long) horasTrabalhadas) {
@@ -216,6 +215,46 @@ public class Facade {
             return String.valueOf(horasTrabalhadas).replace(".", ",");
         }
     }
+
+    /**
+     * getVendasRealizadas():
+     * Passa a data inicial e a data final para um objeto LocalDate
+     * Verifica ID do empregado
+     * A partir do ID do empregado, acessa o Metodo getVendasRealizadas da classe EmpregadoComissionado
+     * Pega o valor em double que o metodo retorna e formata para passar no teste
+     * @param emp
+     * @param dataInicial
+     * @param dataFinal
+     * @return
+     * @throws EmpregadoNaoExisteException
+     */
+    public String getVendasRealizadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(java.time.format.ResolverStyle.STRICT);
+        LocalDate inicio;
+        LocalDate fim;
+        try {
+            inicio = LocalDate.parse(dataInicial, formatter);
+        } catch (DateTimeParseException e) {
+            throw new DataInicialInvalida();
+        }
+        try {
+            fim = LocalDate.parse(dataFinal, formatter);
+        } catch (DateTimeParseException e) {
+            throw new DataFinalInvalida();
+        }
+        verificaIdNulo(emp);
+        if(!empregados.containsKey(emp)){
+            throw new EmpregadoNaoExisteException();
+        }
+        if(!empregados.get(emp).getTipo().equals("comissionado")){
+            throw new EmpregadoNaoComissionado();
+        }
+        EmpregadoComissionado e = (EmpregadoComissionado) empregados.get(emp);
+        double vendasRealizadas = e.getVendasRealizadas(inicio, fim);
+
+        return String.format("%.2f", vendasRealizadas).replace(".", ",");
+    }
+
 /**
  * zerarSistema
  * Limpa o Map empregados
@@ -298,6 +337,44 @@ public class Facade {
         EmpregadoHorista h = (EmpregadoHorista) empregados.get(empregado);
         CartaoDePonto c = new CartaoDePonto(empregado, data, Double.parseDouble(horas.replace(",", ".")));
         h.adicionarCartao(c);
+    }
+
+    /**
+     * Vê se empregado é uma chave para o Map empregados
+     * Cria um resultado de venda
+     * Adiciona a venda na lista
+     * @param empregado
+     * @param data
+     * @param venda
+     * @throws Exception
+     */
+    public void lancaVenda(String empregado, String data, String venda) throws Exception{
+        if(empregado == null || empregado.isEmpty()){
+            throw new IdNulo();
+        }
+
+        if(!empregados.containsKey(empregado)){
+            throw new EmpregadoNaoExisteException();
+        }
+
+        if(!empregados.get(empregado).getTipo().equals("comissionado")){
+            throw new EmpregadoNaoComissionado();
+        }
+
+        double vendaConvertida;
+        try {
+            vendaConvertida = Double.parseDouble(venda.replace(",", "."));
+        } catch (NumberFormatException e) {
+            throw new ValorNegativo();
+        }
+
+        if (vendaConvertida <= 0) {
+            throw new ValorNegativo();
+        }
+        converterData(data);
+        EmpregadoComissionado c = (EmpregadoComissionado) empregados.get(empregado);
+        ResultadoDeVenda v = new ResultadoDeVenda(empregado, data, Double.parseDouble(venda.replace(",", ".")));
+        c.adicionarVenda(v);
     }
 /**
  * criarEmpregado(Com 4 atributos)
