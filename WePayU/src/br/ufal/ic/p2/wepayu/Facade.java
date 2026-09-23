@@ -50,13 +50,17 @@ public class Facade {
     }
 
     /**
-     * verifica se o id é nulo
-     * @param id
+     * @param emp
+     * Id  do empregado
+     * @throws Exception
+     * Retorna a excecao de id nulo ou de Empregado nao existe
      */
-    private void verificaIdNulo(String id)
-    {
-        if(id == null || id.isEmpty()){
+    public void verificaEmpregado(String emp) throws Exception {
+        if(emp == null || emp.isEmpty()){
             throw new IdNulo();
+        }
+        if(empregados.get(emp) == null){
+            throw new EmpregadoNaoExisteException();
         }
     }
 /**
@@ -67,7 +71,7 @@ public class Facade {
  * Se o índice do Map bater com o índice que foi solicitado, retorna a chave para acessar o objeto empregado
  * Se não acha, solta a exceção: Empregado não encontrado.
  */
-    public String getEmpregadoPorNome (String nome, String indice) throws EmpregadoNaoExisteException {
+    public String getEmpregadoPorNome (String nome, String indice) {
 
         int i = Integer.parseInt(indice);
         int cont = 0;
@@ -90,16 +94,9 @@ public class Facade {
      * Mostra o atributo de acordo com o que foi pedido.
      * Se o atributo solicitado não existe, solta a exceção de atributo inexistente
      * */
-    public String getAtributoEmpregado(String e, String atributo) throws Exception {
-        if (e == null || e.isEmpty()) {
-            throw new IdNulo();
-        }
-
-        Empregado empregado = empregados.get(e);
-        if (empregado == null) {
-            throw new EmpregadoNaoExisteException();
-        }
-
+    public String getAtributoEmpregado(String emp, String atributo) throws Exception {
+        verificaEmpregado(emp);
+        Empregado empregado = empregados.get(emp);
         if (atributo.equals("nome")) {
             return empregado.getNome();
         } else if (atributo.equals("endereco")) {
@@ -135,6 +132,61 @@ public class Facade {
         throw new AtributoInexistente();
     }
 
+    public void alteraEmpregado(String emp, String atributo, String valor) throws Exception {
+        verificaEmpregado(emp);
+        Empregado empregado = (Empregado) empregados.get(emp);
+        if (!atributo.equals("sindicalizado")) {
+            throw new AtributoInexistente();
+        }
+
+        if(valor.equals("false")) {
+            empregado.setSindicalizado(false);
+            empregados.remove(emp);
+            empregados.put(emp, empregado);
+        } else {
+            throw new TipoInvalido();
+        }
+    }
+
+    /**
+     * Verifica o id de empregado
+     * Cria um objeto membro sindicato
+     * Substitui no map o objeto empregado para um objeto MembroSindicato
+     * @param emp
+     * @param atributo
+     * @param idSindicato
+     * @param taxaSindical
+     * @return
+     * @throws Exception
+     */
+    public void alteraEmpregado(String emp, String atributo, String valor, String idSindicato, String taxaSindical) throws Exception {
+        verificaEmpregado(emp);
+        Empregado empregado = empregados.get(emp);
+        if (!atributo.equals("sindicalizado")) {
+            throw new AtributoInexistente();
+        }
+
+        if(valor.equals("true")) {
+            if(idSindicato == null || idSindicato.isEmpty()){
+                throw new IdMembroNulo();
+            }
+            for (Map.Entry<String, Empregado> entrada : empregados.entrySet()) {
+                Empregado e = entrada.getValue();
+                if(e.isSindicalizado())
+                {
+                    MembroSindicato m = (MembroSindicato) e;
+                    if(m.getIdMembro().equals(idSindicato)){
+                        throw new IdMembroRepetido();
+                    }
+                }
+            }
+            MembroSindicato m = new MembroSindicato(empregado.getNome(), empregado.getEndereco(), empregado.getEndereco(), idSindicato, Double.parseDouble(taxaSindical.replace(",", ".")));
+            empregados.remove(emp);
+            empregados.put(emp, m);
+        } else {
+            throw new TipoInvalido();
+        }
+    }
     /**
      * getHorasNormaisTrabalhadas():
      * Passa a data inicial e a data final para um objeto LocalDate
@@ -146,7 +198,7 @@ public class Facade {
      * @param dataFinal
      * @return
      */
-    public String getHorasNormaisTrabalhadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException {
+    public String getHorasNormaisTrabalhadas(String emp, String dataInicial, String dataFinal) throws Exception {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(java.time.format.ResolverStyle.STRICT);
         LocalDate inicio;
         LocalDate fim;
@@ -160,10 +212,7 @@ public class Facade {
         } catch (DateTimeParseException e) {
             throw new DataFinalInvalida();
         }
-        verificaIdNulo(emp);
-        if(!empregados.containsKey(emp)){
-            throw new EmpregadoNaoExisteException();
-        }
+        verificaEmpregado(emp);
         if(!empregados.get(emp).getTipo().equals("horista")){
             throw new EmpregadoNaoHorista();
         }
@@ -186,7 +235,7 @@ public class Facade {
      * @param dataFinal
      * @return
      */
-    public String getHorasExtrasTrabalhadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException {
+    public String getHorasExtrasTrabalhadas(String emp, String dataInicial, String dataFinal) throws Exception {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(java.time.format.ResolverStyle.STRICT);
         LocalDate inicio;
         LocalDate fim;
@@ -200,10 +249,7 @@ public class Facade {
         } catch (DateTimeParseException e) {
             throw new DataFinalInvalida();
         }
-        verificaIdNulo(emp);
-        if(!empregados.containsKey(emp)){
-            throw new EmpregadoNaoExisteException();
-        }
+        verificaEmpregado(emp);
         if(!empregados.get(emp).getTipo().equals("horista")){
             throw new EmpregadoNaoHorista();
         }
@@ -215,7 +261,27 @@ public class Facade {
             return String.valueOf(horasTrabalhadas).replace(".", ",");
         }
     }
-
+    public String getTaxasServico(String emp, String dataInicial, String dataFinal) throws Exception {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(java.time.format.ResolverStyle.STRICT);
+        LocalDate inicio, fim;
+        try {
+            inicio = LocalDate.parse(dataInicial, formatter);
+        } catch (DateTimeParseException e) {
+            throw new DataInicialInvalida();
+        }
+        try {
+            fim = LocalDate.parse(dataFinal, formatter);
+        } catch (DateTimeParseException e) {
+            throw new DataFinalInvalida();
+        }
+        verificaEmpregado(emp);
+        if(!empregados.get(emp).isSindicalizado()){
+            throw new EmpregadoNaoSindicalizado();
+        }
+        MembroSindicato m = (MembroSindicato) empregados.get(emp);
+        double taxasServico = m.getTaxasServico(inicio, fim);
+        return String.format("%.2f", taxasServico).replace(".", ",");
+    }
     /**
      * getVendasRealizadas():
      * Passa a data inicial e a data final para um objeto LocalDate
@@ -228,7 +294,7 @@ public class Facade {
      * @return
      * @throws EmpregadoNaoExisteException
      */
-    public String getVendasRealizadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException {
+    public String getVendasRealizadas(String emp, String dataInicial, String dataFinal) throws Exception {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(java.time.format.ResolverStyle.STRICT);
         LocalDate inicio;
         LocalDate fim;
@@ -242,10 +308,7 @@ public class Facade {
         } catch (DateTimeParseException e) {
             throw new DataFinalInvalida();
         }
-        verificaIdNulo(emp);
-        if(!empregados.containsKey(emp)){
-            throw new EmpregadoNaoExisteException();
-        }
+        verificaEmpregado(emp);
         if(!empregados.get(emp).getTipo().equals("comissionado")){
             throw new EmpregadoNaoComissionado();
         }
@@ -290,19 +353,13 @@ public class Facade {
  * Verifica se o id aponta para um empregado existente
  * Remove o empregado
  */
-    public void removerEmpregado (String i) throws Exception{
-        if(i ==  null || i.isEmpty()){
-            throw new IdNulo();
-        }
-        if(!empregados.containsKey(i)){
-            throw new EmpregadoNaoExisteException();
-        }
-
-        empregados.remove(i);
+    public void removerEmpregado (String emp) throws Exception{
+        verificaEmpregado(emp);
+        empregados.remove(emp);
     }
 
     /**
-     * @param empregado
+     * @param emp
      * @param data
      * @param horas
      * @throws Exception
@@ -310,16 +367,9 @@ public class Facade {
      * Cria um cartão de ponto
      * Adiciona o cartao na lista
      */
-    public void lancaCartao(String empregado, String data, String horas) throws Exception{
-        if(empregado == null || empregado.isEmpty()){
-            throw new IdNulo();
-        }
-
-        if(!empregados.containsKey(empregado)){
-            throw new EmpregadoNaoExisteException();
-        }
-
-        if(!empregados.get(empregado).getTipo().equals("horista")){
+    public void lancaCartao(String emp, String data, String horas) throws Exception{
+        verificaEmpregado(emp);
+        if(!empregados.get(emp).getTipo().equals("horista")){
             throw new EmpregadoNaoHorista();
         }
 
@@ -334,8 +384,8 @@ public class Facade {
             throw new HorasNegativas();
         }
         converterData(data);
-        EmpregadoHorista h = (EmpregadoHorista) empregados.get(empregado);
-        CartaoDePonto c = new CartaoDePonto(empregado, data, Double.parseDouble(horas.replace(",", ".")));
+        EmpregadoHorista h = (EmpregadoHorista) empregados.get(emp);
+        CartaoDePonto c = new CartaoDePonto(emp, data, Double.parseDouble(horas.replace(",", ".")));
         h.adicionarCartao(c);
     }
 
@@ -343,21 +393,15 @@ public class Facade {
      * Vê se empregado é uma chave para o Map empregados
      * Cria um resultado de venda
      * Adiciona a venda na lista
-     * @param empregado
+     * @param emp
      * @param data
      * @param venda
      * @throws Exception
      */
-    public void lancaVenda(String empregado, String data, String venda) throws Exception{
-        if(empregado == null || empregado.isEmpty()){
-            throw new IdNulo();
-        }
+    public void lancaVenda(String emp, String data, String venda) throws Exception{
+        verificaEmpregado(emp);
 
-        if(!empregados.containsKey(empregado)){
-            throw new EmpregadoNaoExisteException();
-        }
-
-        if(!empregados.get(empregado).getTipo().equals("comissionado")){
+        if(!empregados.get(emp).getTipo().equals("comissionado")){
             throw new EmpregadoNaoComissionado();
         }
 
@@ -372,9 +416,44 @@ public class Facade {
             throw new ValorNegativo();
         }
         converterData(data);
-        EmpregadoComissionado c = (EmpregadoComissionado) empregados.get(empregado);
-        ResultadoDeVenda v = new ResultadoDeVenda(empregado, data, Double.parseDouble(venda.replace(",", ".")));
+        EmpregadoComissionado c = (EmpregadoComissionado) empregados.get(emp);
+        ResultadoDeVenda v = new ResultadoDeVenda(emp, data, Double.parseDouble(venda.replace(",", ".")));
         c.adicionarVenda(v);
+    }
+
+    public MembroSindicato buscaMembro(String membro){
+        for (Map.Entry<String, Empregado> entrada : empregados.entrySet()) {
+            Empregado e = entrada.getValue();
+            if(e.isSindicalizado())
+            {
+                MembroSindicato m = (MembroSindicato) e;
+                if(m.getIdMembro().equals(membro)){
+                    return m;
+                }
+            }
+        }
+        throw new MembroInexistente();
+    }
+
+    public void lancaTaxaServico(String membro, String data, String valor) throws Exception{
+        if(membro == null || membro.isEmpty()){
+            throw new IdMembroNulo();
+        }
+        MembroSindicato m = buscaMembro(membro);
+
+        double valorConvertido;
+        try {
+            valorConvertido = Double.parseDouble(valor.replace(",", "."));
+        } catch (NumberFormatException e) {
+            throw new ValorNegativo();
+        }
+
+        if (valorConvertido <= 0) {
+            throw new ValorNegativo();
+        }
+        converterData(data);
+        TaxaServico t = new TaxaServico(data, Double.parseDouble(valor.replace(",", ".")));
+        m.adicionarTaxaServico(t);
     }
 /**
  * criarEmpregado(Com 4 atributos)

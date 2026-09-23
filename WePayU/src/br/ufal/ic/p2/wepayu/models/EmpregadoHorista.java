@@ -11,7 +11,7 @@ public class EmpregadoHorista extends Empregado{
     private List<CartaoDePonto> cartoes = new ArrayList<>();
     public EmpregadoHorista(){super();}
     public EmpregadoHorista(String nome, String endereco, double salarioPorHora){
-        super(nome, endereco, "horista");
+        super(nome, endereco, "horista", false);
         this.salarioPorHora = salarioPorHora;
     }
 

@@ -13,7 +13,7 @@ public class EmpregadoComissionado extends Empregado{
     private List<ResultadoDeVenda> vendas = new ArrayList<>();
     public EmpregadoComissionado(){super();}//Para o XML
     public EmpregadoComissionado(String nome, String endereco, double salarioMensal, double comissao){
-        super(nome, endereco, "comissionado");
+        super(nome, endereco, "comissionado", false);
         this.salarioMensal = salarioMensal;
         this.comissao = comissao;
     }

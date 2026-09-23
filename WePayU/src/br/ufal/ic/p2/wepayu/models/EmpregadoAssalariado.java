@@ -4,7 +4,7 @@ public class EmpregadoAssalariado extends Empregado{
     double salarioMensal;
     public EmpregadoAssalariado(){super();}
     public EmpregadoAssalariado(String nome, String endereco, double salarioMensal){
-        super(nome, endereco, "assalariado");
+        super(nome, endereco, "assalariado", false);
         this.salarioMensal = salarioMensal;
     }
 
