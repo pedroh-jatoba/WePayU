@@ -9,12 +9,17 @@ import java.time.LocalDate;
 public class EmpregadoHorista extends Empregado{
     double salarioPorHora;
     private List<CartaoDePonto> cartoes = new ArrayList<>();
-    public EmpregadoHorista(){super();}
-    public EmpregadoHorista(String nome, String endereco, double salarioPorHora){
-        super(nome, endereco, "horista", false);
+    public EmpregadoHorista(){
+        super();
+    }
+    public EmpregadoHorista(String nome, String endereco, double salarioPorHora, MetodoPagamento metodoPagamento){
+        super(metodoPagamento, nome, endereco, "horista", false);
         this.salarioPorHora = salarioPorHora;
     }
-
+    public EmpregadoHorista(Empregado empregado, double salarioPorHora){
+        super(empregado);
+        this.salarioPorHora = salarioPorHora;
+    }
     public double getSalarioPorHora() {
         return salarioPorHora;
     }

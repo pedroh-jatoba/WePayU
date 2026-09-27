@@ -3,8 +3,12 @@ package br.ufal.ic.p2.wepayu.models;
 public class EmpregadoAssalariado extends Empregado{
     double salarioMensal;
     public EmpregadoAssalariado(){super();}
-    public EmpregadoAssalariado(String nome, String endereco, double salarioMensal){
-        super(nome, endereco, "assalariado", false);
+    public EmpregadoAssalariado(String nome, String endereco, double salarioMensal, MetodoPagamento metodoPagamento){
+        super(metodoPagamento, nome, endereco, "assalariado", false);
+        this.salarioMensal = salarioMensal;
+    }
+    public EmpregadoAssalariado(Empregado empregado, double salarioMensal){
+        super(empregado);
         this.salarioMensal = salarioMensal;
     }
 

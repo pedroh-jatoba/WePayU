@@ -6,15 +6,27 @@ public class Empregado {
     private String endereco;
     private String tipo;
     private boolean sindicalizado;
+    private MetodoPagamento metodoPagamento;
+    private Sindicato sindicato;
 
     public Empregado(){}
-    public Empregado(String nome, String endereco, String tipo, boolean sindicalizado){
+    public Empregado(MetodoPagamento metodoPagamento, String nome, String endereco, String tipo, boolean sindicalizado){
         this.nome = nome;
         this.endereco = endereco;
         this.tipo = tipo;
         this.sindicalizado = sindicalizado;
+        this.metodoPagamento = metodoPagamento;
     }
-
+    public Empregado(Empregado empregado){
+        this.nome = empregado.getNome();
+        this.endereco = empregado.getEndereco();
+        this.tipo = empregado.getTipo();
+        this.sindicalizado = empregado.isSindicalizado();
+        this.metodoPagamento = empregado.getMetodoPagamento();
+        if(this.sindicalizado){
+            this.sindicato = empregado.getSindicato();
+        }
+    }
     public String getNome() {
         return nome;
     }
@@ -45,5 +57,23 @@ public class Empregado {
 
     public void setTipo(String tipo) {
         this.tipo = tipo;
+    }
+
+    public MetodoPagamento getMetodoPagamento() {
+        return metodoPagamento;
+    }
+
+    public Sindicato getSindicato() {
+        return sindicato;
+    }
+
+    public void setSindicato(Sindicato sindicato) {
+        this.sindicato = sindicato;
+    }
+
+
+
+    public void setMetodoPagamento(MetodoPagamento metodoPagamento) {
+        this.metodoPagamento = metodoPagamento;
     }
 }

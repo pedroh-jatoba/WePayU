@@ -37,6 +37,7 @@ public class Facade {
     /**
      * Formatador de data
      * @param dataStr
+     * Pega o valor da data como string e a retorna como localdata
      * @return
      * @throws Exception
      */
@@ -51,7 +52,8 @@ public class Facade {
 
     /**
      * @param emp
-     * Id  do empregado
+     * ID do empregado
+     * Valor do ID do empregado
      * @throws Exception
      * Retorna a excecao de id nulo ou de Empregado nao existe
      */
@@ -63,16 +65,20 @@ public class Facade {
             throw new EmpregadoNaoExisteException();
         }
     }
-/**
- * getEmpregadoPorNome:
- * Pega o nome e o id do empregado
- * Passa para o id para inteiro
- * Procura o nome no Map empregados
- * Se o índice do Map bater com o índice que foi solicitado, retorna a chave para acessar o objeto empregado
- * Se não acha, solta a exceção: Empregado não encontrado.
- */
-    public String getEmpregadoPorNome (String nome, String indice) {
 
+    /**
+     *  * Passa para o id para inteiro
+     *  * Procura o nome no Map empregados
+     *  * Se o índice do Map bater com o índice que foi solicitado, retorna a chave para acessar o objeto empregado
+     *  * Se não acha, solta a exceção: Empregado não encontrado.
+     * @param nome
+     * Nome do Empregado
+     * @param indice
+     * Indice do empregado
+     * @return
+     * Retorna a chave para acessar o empregado
+     */
+    public String getEmpregadoPorNome (String nome, String indice) {
         int i = Integer.parseInt(indice);
         int cont = 0;
 
@@ -87,76 +93,292 @@ public class Facade {
         }
         throw new EmpregadoNaoEncontrado();
     }
-    /** getAtributoEmpregado
+
+    /**
+     * @param empregado
+     * Recebe o objeto empregado
+     * @return
+     * Retorna seu valor (se for horista retorna salário por hora, se não retorna mensal)
+     */
+    /*public double getSalario(Empregado empregado){
+        double salario;
+        if(empregado.getTipo().equals("horista")) {
+            EmpregadoHorista horista = (EmpregadoHorista) empregado;
+            salario = horista.getSalarioPorHora();
+        }else if(empregado.getTipo().equals("assalariado")){
+            EmpregadoAssalariado assalariado = (EmpregadoAssalariado) empregado;
+            salario = assalariado.getSalarioMensal();
+        }
+        else{
+            EmpregadoComissionado comissionado = (EmpregadoComissionado) empregado;
+            salario = comissionado.getSalarioMensal();
+        }
+        return salario;
+    }
+     */
+
+    /**
      * Pega o id do empregado e o atributo solicitado
      * Se o id é nulo, solta a exceção de id nulo
      * Se o id não aponta para um empregado existente, solta a exceção de empregado não existe
      * Mostra o atributo de acordo com o que foi pedido.
      * Se o atributo solicitado não existe, solta a exceção de atributo inexistente
-     * */
+     * @param emp
+     * Chave para acessar o empregado
+     * @param atributo
+     * atributo a ser retornado
+     * @return
+     * retorna o atributo desejado como string
+     * @throws Exception
+     * retorna exceçoes
+     */
     public String getAtributoEmpregado(String emp, String atributo) throws Exception {
         verificaEmpregado(emp);
         Empregado empregado = empregados.get(emp);
         if (atributo.equals("nome")) {
             return empregado.getNome();
-        } else if (atributo.equals("endereco")) {
+        }
+        if (atributo.equals("endereco")) {
             return empregado.getEndereco();
-        } else if (atributo.equals("tipo")) {
+        }
+        if (atributo.equals("tipo")) {
             return empregado.getTipo();
-        } else if (atributo.equals("sindicalizado")) {
-            return "false";
-        } else if (atributo.equals("salario")) {
-            String salarioFormatado;
+        }
+        if (atributo.equals("sindicalizado")) {
+            if(empregado.isSindicalizado()){
+                return "true";
+            }
+            else {
+                return "false";
+            }
+        }
+        if (atributo.equals("salario")) {
+            double salario;
             if(empregado.getTipo().equals("horista")) {
                 EmpregadoHorista horista = (EmpregadoHorista) empregado;
-                salarioFormatado = String.format("%.2f", horista.getSalarioPorHora());
+                salario = horista.getSalarioPorHora();
             }else if(empregado.getTipo().equals("assalariado")){
                 EmpregadoAssalariado assalariado = (EmpregadoAssalariado) empregado;
-                salarioFormatado = String.format("%.2f", assalariado.getSalarioMensal());
+                salario = assalariado.getSalarioMensal();
             }
             else{
                 EmpregadoComissionado comissionado = (EmpregadoComissionado) empregado;
-                salarioFormatado = String.format("%.2f", comissionado.getSalarioMensal());
+                salario = comissionado.getSalarioMensal();
             }
-            return salarioFormatado.replace(".", ",");
-        } else if (atributo.equals("comissao")) {
-            if (empregado instanceof EmpregadoComissionado) {
+            String salariostr = String.format("%.2f", salario);
+            return salariostr.replace(".", ",");
+        }
+        if (atributo.equals("comissao")) {
+            if (empregado.getTipo().equals("comissionado")) {
                 EmpregadoComissionado empComissionado = (EmpregadoComissionado) empregado;
                 String comissaoFormatada = String.format("%.2f", empComissionado.getComissao());
                 return comissaoFormatada.replace(".", ",");
-
             } else {
-                throw new AtributoInexistente();
+                throw new EmpregadoNaoComissionado();
+            }
+        }
+        if(atributo.equals("idSindicato")){
+            if(empregado.isSindicalizado()){
+                Sindicato s = empregados.get(emp).getSindicato();
+                return s.getIdMembro();
+            }else {
+                throw new EmpregadoNaoSindicalizado();
+            }
+        }
+        if(atributo.equals("metodoPagamento")){
+            MetodoPagamento m = empregado.getMetodoPagamento();
+            return m.getTipo();
+        }
+        if(atributo.equals("banco")){
+            MetodoPagamento metodoPagamento = empregado.getMetodoPagamento();
+            if(!metodoPagamento.getTipo().equals("banco")){
+                throw new EmpregadoNaoBanco();
+            }
+            Banco banco = (Banco) metodoPagamento;
+            return banco.getBanco();
+        }
+        if(atributo.equals("agencia")){
+            MetodoPagamento metodoPagamento = empregado.getMetodoPagamento();
+            if(!metodoPagamento.getTipo().equals("banco")){
+                throw new EmpregadoNaoBanco();
+            }
+            Banco banco = (Banco) metodoPagamento;
+            return banco.getAgencia();
+        }
+        if(atributo.equals("contaCorrente")){
+            MetodoPagamento metodoPagamento = empregado.getMetodoPagamento();
+            if(!metodoPagamento.getTipo().equals("banco")){
+                throw new EmpregadoNaoBanco();
+            }
+            Banco banco = (Banco) metodoPagamento;
+            return banco.getContaCorrente();
+        }
+        if(atributo.equals("taxaSindical")){
+            if(empregado.isSindicalizado()) {
+                Sindicato s = empregados.get(emp).getSindicato();
+                String taxaSindical = String.format("%.2f", s.getTaxaSindical());
+                return taxaSindical.replace(".", ",");
+            } else {
+                throw new EmpregadoNaoSindicalizado();
             }
         }
         throw new AtributoInexistente();
     }
 
+    /**
+     * @param membro
+     * Id de Membro
+     * @return
+     * Retorna o membro do Sindicato
+     */
+    public Sindicato buscaMembro(String membro){
+        for (Map.Entry<String, Empregado> entrada : empregados.entrySet()) {
+            Empregado e = entrada.getValue();
+            if(e.isSindicalizado())
+            {
+                Sindicato s = e.getSindicato();
+                if(s.getIdMembro().equals(membro)){
+                    return s;
+                }
+            }
+        }
+        throw new MembroInexistente();
+    }
+
+
+    /**
+     * @param emp
+     * Chave para acessar empregado
+     * @param atributo
+     * Atributo a ser alterado
+     * @param valor
+     * Valor que o atributo receberá
+     * @throws Exception
+     */
     public void alteraEmpregado(String emp, String atributo, String valor) throws Exception {
         verificaEmpregado(emp);
         Empregado empregado = (Empregado) empregados.get(emp);
-        if (!atributo.equals("sindicalizado")) {
+
+        if (atributo == null || atributo.isEmpty()) {
             throw new AtributoInexistente();
         }
 
-        if(valor.equals("false")) {
-            empregado.setSindicalizado(false);
-            empregados.remove(emp);
-            empregados.put(emp, empregado);
-        } else {
-            throw new TipoInvalido();
+        switch (atributo) {
+            case "nome":
+                if (valor == null || valor.isEmpty()) {
+                    throw new NomeNulo();
+                }
+                empregado.setNome(valor);
+                break;
+
+            case "endereco":
+                if (valor == null || valor.isEmpty()) {
+                    throw new EnderecoNulo();
+                }
+                empregado.setEndereco(valor);
+                break;
+
+            case "tipo":
+                double salario;
+                if (valor.equals("assalariado")) {
+                    EmpregadoAssalariado assalariado = (EmpregadoAssalariado) empregado;
+                    salario = assalariado.getSalarioMensal();
+                    empregados.put(emp, new EmpregadoAssalariado(empregado, salario));
+                    empregados.get(emp).setTipo("assalariado");
+                } else if (valor.equals("comissionado")) {
+                    EmpregadoComissionado comissionado = (EmpregadoComissionado) empregado;
+                    salario = comissionado.getSalarioMensal();
+                    empregados.put(emp, new EmpregadoComissionado(empregado,salario, 0.0));
+                    empregados.get(emp).setTipo("comissionado");
+                } else if (valor.equals("horista")) {
+                    EmpregadoHorista horista = (EmpregadoHorista) empregado;
+                    salario = horista.getSalarioPorHora();
+                    empregados.put(emp, new EmpregadoHorista(empregado, salario));
+                    empregados.get(emp).setTipo("horista");
+                } else {
+                    throw new TipoInvalido();
+                }
+                break;
+
+            case "salario":
+                if (valor == null || valor.isEmpty()) {
+                    throw new SalarioNulo();
+                }
+                double salarioConvertido;
+                try {
+                    salarioConvertido = Double.parseDouble(valor.replace(",", "."));
+                } catch (NumberFormatException e) {
+                    throw new SalarioNaoNumerico();
+                }
+                if (salarioConvertido < 0) {
+                    throw new SalarioNegativo();
+                }
+
+                if (empregado instanceof EmpregadoComissionado) {
+                    ((EmpregadoComissionado) empregado).setSalarioMensal(salarioConvertido);
+                } else if (empregado instanceof EmpregadoAssalariado) {
+                    ((EmpregadoAssalariado) empregado).setSalarioMensal(salarioConvertido);
+                } else if (empregado instanceof EmpregadoHorista) {
+                    ((EmpregadoHorista) empregado).setSalarioPorHora(salarioConvertido);
+                }
+                break;
+
+            case "comissao":
+                if (!empregado.getTipo().equals("comissionado")) {
+                    throw new EmpregadoNaoComissionado();
+                }
+                if (valor == null || valor.isEmpty()) {
+                    throw new ComissaoNula();
+                }
+                double comissaoConvertida;
+                try {
+                    comissaoConvertida = Double.parseDouble(valor.replace(",", "."));
+                } catch (NumberFormatException e) {
+                    throw new ComissaoNaoNumerica();
+                }
+                if (comissaoConvertida < 0) {
+                    throw new ComissaoNegativa();
+                }
+                ((EmpregadoComissionado) empregado).setComissao(comissaoConvertida);
+                break;
+
+            case "sindicalizado":
+                if (valor.equalsIgnoreCase("true")) {
+                    empregado.setSindicalizado(true);
+                } else if (valor.equalsIgnoreCase("false")) {
+                    empregado.setSindicalizado(false);
+                } else {
+                    throw new NaoBooleano();
+                }
+                break;
+
+            case "metodoPagamento":
+                if(valor.equals("correios") || valor.equals("emMaos")){
+                    MetodoPagamento metodoPagamento = new MetodoPagamento(valor);
+                    empregados.get(emp).setMetodoPagamento(metodoPagamento);
+                } else if(valor.equals("banco")){
+                    throw new MetodoInvalido();
+                }
+                else {
+                    throw new MetodoInvalido();
+                }
+                break;
+
+            default:
+                throw new AtributoInexistente();
         }
     }
-
     /**
-     * Verifica o id de empregado
-     * Cria um objeto membro sindicato
-     * Substitui no map o objeto empregado para um objeto MembroSindicato
      * @param emp
+     * Chave para acessar o empregado
      * @param atributo
+     * Atributo a ser alterado
+     * @param valor
+     * Valor que o atributo receberá
      * @param idSindicato
+     * Id de membro do sindicato
      * @param taxaSindical
-     * @return
+     * Taxa Sindical
      * @throws Exception
      */
     public void alteraEmpregado(String emp, String atributo, String valor, String idSindicato, String taxaSindical) throws Exception {
@@ -165,26 +387,123 @@ public class Facade {
         if (!atributo.equals("sindicalizado")) {
             throw new AtributoInexistente();
         }
-
         if(valor.equals("true")) {
             if(idSindicato == null || idSindicato.isEmpty()){
-                throw new IdMembroNulo();
+                throw new IdSindicatoNulo();
+            }
+            if(taxaSindical == null || taxaSindical.isEmpty()){
+                throw new TaxaSindicalNula();
+            }
+            double taxaConvertida;
+            try {
+                taxaConvertida = Double.parseDouble(taxaSindical.replace(",", "."));
+            } catch (NumberFormatException e) {
+                throw new TaxaSindicalNaoNumerica();
+            }
+            if (taxaConvertida < 0) {
+                throw new TaxaSindicalNegativo();
             }
             for (Map.Entry<String, Empregado> entrada : empregados.entrySet()) {
                 Empregado e = entrada.getValue();
                 if(e.isSindicalizado())
                 {
-                    MembroSindicato m = (MembroSindicato) e;
-                    if(m.getIdMembro().equals(idSindicato)){
+                    Sindicato s = e.getSindicato();
+                    if(s.getIdMembro().equals(idSindicato)){
                         throw new IdMembroRepetido();
                     }
                 }
             }
-            MembroSindicato m = new MembroSindicato(empregado.getNome(), empregado.getEndereco(), empregado.getEndereco(), idSindicato, Double.parseDouble(taxaSindical.replace(",", ".")));
-            empregados.remove(emp);
-            empregados.put(emp, m);
+            Sindicato s = new Sindicato(idSindicato, taxaConvertida);
+            empregados.get(emp).setSindicato(s);
+            empregados.get(emp).setSindicalizado(true);
         } else {
             throw new TipoInvalido();
+        }
+    }
+
+    /**
+     * @param emp
+     * Chave para acessar o empregado
+     * @param atributo
+     * Atributo a ser alterado (Metodo de Pagamento)
+     * @param valor
+     * Valor que o atributo receberá (Banco)
+     * @param banco
+     * Banco
+     * @param agencia
+     * Agencia
+     * @param contaCorrente
+     * Conta Corrente
+     * @throws Exception
+     */
+    public void alteraEmpregado(String emp, String atributo, String valor, String banco, String agencia, String contaCorrente) throws Exception {
+        verificaEmpregado(emp);
+
+        if (atributo.equals("metodoPagamento")) {
+            if (valor.equals("banco")) {
+                if (banco == null || banco.isEmpty()) {
+                    throw new BancoNulo();
+                }
+                if (agencia == null || agencia.trim().isEmpty()) {
+                    throw new AgenciaNula();
+                }
+                if (contaCorrente == null || contaCorrente.trim().isEmpty()) {
+                    throw new ContaNula();
+                }
+
+                Banco b = new Banco(banco, agencia, contaCorrente);
+                empregados.get(emp).setMetodoPagamento(b);
+                return;
+            } else {
+                throw new MetodoInvalido();
+            }
+        }
+    }
+
+
+    /**
+     * @param emp
+     * Chave para acessar o empregado
+     * @param atributo
+     * Atributo a ser alterado
+     * @param valor
+     * Valor que o atributo receberá
+     * @param valor2
+     * Valor que a comissao ou o salario recebera
+     * @throws Exception
+     */
+
+    public void alteraEmpregado(String emp, String atributo, String valor, String valor2) throws Exception {
+        verificaEmpregado(emp);
+        Empregado empregado = empregados.get(emp);
+        if (!atributo.equals("tipo")) {
+            throw new AtributoInexistente();
+        }
+        if (!valor.equals("comissionado") && !valor.equals("horista")) {
+            throw new TipoInvalido();
+        }
+        if (valor2 == null || valor2.isEmpty()) {
+            throw new ComissaoNula();
+        }
+
+        double valorDouble;
+        try {
+            valorDouble = Double.parseDouble(valor2.replace(",", "."));
+        } catch (NumberFormatException e) {
+            throw new ComissaoNaoNumerica();
+        }
+
+        if (valorDouble < 0) {
+            throw new ComissaoNegativa();
+        }
+        empregado.setTipo(valor);
+        if(valor.equals("comissionado")){
+            EmpregadoComissionado comissionado = new EmpregadoComissionado(empregado, 0, valorDouble);
+            empregados.put(emp, comissionado);
+        }
+        else {
+            EmpregadoHorista horista = new EmpregadoHorista(empregado, valorDouble);
+            empregados.put(emp, horista);
         }
     }
     /**
@@ -194,11 +513,16 @@ public class Facade {
      * A partir do ID do empregado, acessa o Metodo getHorasNormaisTrabalhadas da classe EmpregadoHorista
      * Pega o valor em double que o metodo retorna e formata para passar no teste
      * @param emp
+     * Chave para acessar o empregado
      * @param dataInicial
+     * Data inicial
      * @param dataFinal
+     * Data final
      * @return
+     * retorna as horas normais trabalhadas em formato de string
+     * @throws Exception
      */
-    public String getHorasNormaisTrabalhadas(String emp, String dataInicial, String dataFinal) throws Exception {
+    public String getHorasNormaisTrabalhadas (String emp, String dataInicial, String dataFinal) throws Exception {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(java.time.format.ResolverStyle.STRICT);
         LocalDate inicio;
         LocalDate fim;
@@ -231,9 +555,13 @@ public class Facade {
      * A partir do ID do empregado, acessa o Metodo getHorasExtrasTrabalhadas da classe EmpregadoHorista
      * Pega o valor em double que o metodo retorna e formata para passar no teste
      * @param emp
+     * Chave para acessar o empregado
      * @param dataInicial
+     * Data inicial
      * @param dataFinal
+     * Data final
      * @return
+     * retorna as horas extras trabalhadas em formato de string
      */
     public String getHorasExtrasTrabalhadas(String emp, String dataInicial, String dataFinal) throws Exception {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(java.time.format.ResolverStyle.STRICT);
@@ -278,8 +606,8 @@ public class Facade {
         if(!empregados.get(emp).isSindicalizado()){
             throw new EmpregadoNaoSindicalizado();
         }
-        MembroSindicato m = (MembroSindicato) empregados.get(emp);
-        double taxasServico = m.getTaxasServico(inicio, fim);
+        Sindicato s = empregados.get(emp).getSindicato();
+        double taxasServico = s.getTaxasServico(inicio, fim);
         return String.format("%.2f", taxasServico).replace(".", ",");
     }
     /**
@@ -289,9 +617,13 @@ public class Facade {
      * A partir do ID do empregado, acessa o Metodo getVendasRealizadas da classe EmpregadoComissionado
      * Pega o valor em double que o metodo retorna e formata para passar no teste
      * @param emp
+     * Chave para acessar o empregado
      * @param dataInicial
+     * Data inicial a ser levada em conta
      * @param dataFinal
+     * Data inicial a ser levada em conta
      * @return
+     * Retorna o valor total das vendas em forma de string
      * @throws EmpregadoNaoExisteException
      */
     public String getVendasRealizadas(String emp, String dataInicial, String dataFinal) throws Exception {
@@ -314,7 +646,6 @@ public class Facade {
         }
         EmpregadoComissionado e = (EmpregadoComissionado) empregados.get(emp);
         double vendasRealizadas = e.getVendasRealizadas(inicio, fim);
-
         return String.format("%.2f", vendasRealizadas).replace(".", ",");
     }
 
@@ -347,17 +678,20 @@ public class Facade {
             e.printStackTrace();
         }
     }
-/**
- * removerEmpregado()
- * Verifica se o id é nulo ou vazio
- * Verifica se o id aponta para um empregado existente
- * Remove o empregado
- */
+
+    /**
+     * removerEmpregado()
+     * Verifica se o id é nulo ou vazio
+     * Verifica se o id aponta para um empregado existente
+     * Remove o empregado
+     * @param emp
+     * Chave para acessar o empregado
+     * @throws Exception
+     */
     public void removerEmpregado (String emp) throws Exception{
         verificaEmpregado(emp);
         empregados.remove(emp);
     }
-
     /**
      * @param emp
      * @param data
@@ -421,25 +755,12 @@ public class Facade {
         c.adicionarVenda(v);
     }
 
-    public MembroSindicato buscaMembro(String membro){
-        for (Map.Entry<String, Empregado> entrada : empregados.entrySet()) {
-            Empregado e = entrada.getValue();
-            if(e.isSindicalizado())
-            {
-                MembroSindicato m = (MembroSindicato) e;
-                if(m.getIdMembro().equals(membro)){
-                    return m;
-                }
-            }
-        }
-        throw new MembroInexistente();
-    }
 
     public void lancaTaxaServico(String membro, String data, String valor) throws Exception{
         if(membro == null || membro.isEmpty()){
             throw new IdMembroNulo();
         }
-        MembroSindicato m = buscaMembro(membro);
+        Sindicato m = buscaMembro(membro);
 
         double valorConvertido;
         try {
@@ -492,14 +813,14 @@ public class Facade {
         if (salarioConvertido < 0) {
             throw new SalarioNegativo();
         }
-
+        MetodoPagamento metodoPagamento = new MetodoPagamento("emMaos");
         // GErrar ID
         String id = String.valueOf(contadorId++);
         if(tipo.equals("horista")){
-            EmpregadoHorista novo = new EmpregadoHorista(nome, endereco, salarioConvertido);
+            EmpregadoHorista novo = new EmpregadoHorista(nome, endereco, salarioConvertido, metodoPagamento);
             empregados.put(id, novo);
         } else {
-            EmpregadoAssalariado novo = new EmpregadoAssalariado(nome, endereco, salarioConvertido);
+            EmpregadoAssalariado novo = new EmpregadoAssalariado(nome, endereco, salarioConvertido, metodoPagamento);
             empregados.put(id, novo);
         }
 
@@ -507,7 +828,9 @@ public class Facade {
     }
     /**
      * @param nome
+     * Nome do empregado
      * @param endereco
+     * Endereco do
      * @param tipo
      * @param salario
      * @param comissao
@@ -563,8 +886,9 @@ public class Facade {
         if (comissaoConvertida < 0) {
             throw new ComissaoNegativa();
         }
+        MetodoPagamento metodoPagamento = new MetodoPagamento("emMaos");
         String id = String.valueOf(contadorId++);
-        EmpregadoComissionado novo = new EmpregadoComissionado(nome, endereco, salarioConvertido, comissaoConvertida);
+        EmpregadoComissionado novo = new EmpregadoComissionado(nome, endereco, salarioConvertido, comissaoConvertida, metodoPagamento);
 
         empregados.put(id, novo);
 

@@ -7,20 +7,15 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MembroSindicato extends Empregado{
+public class Sindicato {
     private String idMembro;
     private double taxaSindical;
     List<TaxaServico> taxasServicos = new ArrayList<>();
 
-    public MembroSindicato(){super();}
-    public MembroSindicato(String nome, String endereco, String tipo, String idMembro, double taxaSindical){
-        super(nome, endereco, tipo, true);
+    public Sindicato(){}
+    public Sindicato(String idMembro, double taxaSindical){
         this.idMembro = idMembro;
         this.taxaSindical = taxaSindical;
-    }
-
-    public String getEndereco() {
-        return super.getEndereco();
     }
 
     public List<TaxaServico> getTaxasServicos() {
