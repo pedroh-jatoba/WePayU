@@ -18,14 +18,22 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.Callable;
 
-public class Facade {
-    private Map<String, Empregado> empregados = new LinkedHashMap<>();
-    private int contadorId = 1;
 /**
- * Construtor Facade()
- * Abre o Arquivo banco.xml
- * Passa o que está no arquivo para o Map empregados
-*/
+ * Fachada principal do sistema de folha de pagamento.
+ *
+ * <p>Centraliza as operações de cadastro e alteração de empregados, controle
+ * de vendas, cartões de ponto e taxas sindicais, além da geração da folha
+ * de pagamento e da persistência dos dados do sistema.</p>
+ */
+public class Facade {
+    /** Empregados cadastrados no sistema, indexados por seus identificadores. */
+    private Map<String, Empregado> empregados = new LinkedHashMap<>();
+    /** Próximo identificador numérico disponível para um empregado. */
+    private int contadorId = 1;
+    /**
+     * Inicializa a fachada e carrega os dados persistidos em {@code banco.xml},
+     * caso o arquivo exista.
+     */
     public Facade() {
         try{
             File banco = new File("banco.xml");
@@ -42,14 +50,32 @@ public class Facade {
         }catch (Exception e){}
     }
 
+    /** Histórico de estados anteriores usado para desfazer operações. */
     private final Deque<byte[]> pilhaDesfazer = new ArrayDeque<>();
+    /** Histórico de estados posteriores usado para refazer operações. */
     private final Deque<byte[]> pilhaRefazer = new ArrayDeque<>();
+    /** Indica se o sistema foi encerrado e não aceita novas operações comuns. */
     private boolean encerrado = false;
 
+    /**
+     * Representa uma operação do sistema que pode lançar uma exceção.
+     */
     private interface Comando {
+        /**
+         * Executa a operação representada pelo comando.
+         *
+         * @throws Exception se a operação não puder ser concluída
+         */
         void executa() throws Exception;
     }
 
+    /**
+     * Executa um comando registrando o estado anterior para permitir desfazê-lo. Se ocorrer uma exceção, restaura o estado anterior.
+     *
+     * @param comando operação a ser executada
+     * @return resultado da operação
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     private <T> T executaComandoComRetorno(Callable<T> comando) throws Exception {
         verificaSistemaAberto();
         byte[] antes = tiraFoto();
@@ -65,6 +91,12 @@ public class Facade {
         return resultado;
     }
 
+    /**
+     * Executa uma operação do sistema e registra o estado anterior para permitir desfazê-la.
+     *
+     * @param comando operação a ser executada
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     private void executaComando(Comando comando) throws Exception {
         executaComandoComRetorno(() -> {
             comando.executa();
@@ -72,6 +104,11 @@ public class Facade {
         });
     }
 
+    /**
+     * Serializa o estado atual dos empregados e do contador de identificadores.
+     *
+     * @return representação XML do estado atual em bytes
+     */
     private byte[] tiraFoto() {
         ByteArrayOutputStream saida = new ByteArrayOutputStream();
         try (XMLEncoder encoder = new XMLEncoder(saida)) {
@@ -82,6 +119,11 @@ public class Facade {
     }
 
     @SuppressWarnings("unchecked")
+    /**
+     * Restaura os empregados e o contador de identificadores a partir de uma cópia serializada.
+     *
+     * @param foto estado serializado a ser restaurado
+     */
     private void restaura(byte[] foto) {
         try (XMLDecoder decoder = new XMLDecoder(new ByteArrayInputStream(foto))) {
             this.empregados = (Map<String, Empregado>) decoder.readObject();
@@ -89,10 +131,18 @@ public class Facade {
         }
     }
 
+    /**
+     * Verifica se o sistema continua aberto.
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     private void verificaSistemaAberto() throws Exception {
         if (encerrado) throw new SistemaEncerrado();
     }
 
+    /**
+     * Desfaz a última operação registrada.
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     public void undo() throws Exception {
         verificaSistemaAberto();
         if (pilhaDesfazer.isEmpty()) throw new NaoHaComandoADesfazer();
@@ -100,6 +150,10 @@ public class Facade {
         restaura(pilhaDesfazer.pop());
     }
 
+    /**
+     * Refaz a última operação desfeita.
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     public void redo() throws Exception {
         verificaSistemaAberto();
         if (pilhaRefazer.isEmpty()) throw new NaoHaComandoARefazer();
@@ -107,6 +161,12 @@ public class Facade {
         restaura(pilhaRefazer.pop());
     }
 
+    /**
+     * Retorna a quantidade de empregados cadastrados.
+     *
+     * @return quantidade de empregados em formato textual
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     public String getNumeroDeEmpregados() throws Exception {
         verificaSistemaAberto();
         return String.valueOf(empregados.size());
@@ -239,6 +299,14 @@ public class Facade {
         }
         throw new MembroInexistente();
     }
+    /**
+     * Cria uma instância de empregado do tipo especificado, preservando os dados do empregado recebido.
+     *
+     * @param empregado empregado cujos dados serão usados
+     * @param tipo tipo de empregado desejado
+     * @return novo empregado do tipo solicitado
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     private Empregado criaEmpregadoPorTipo(
             Empregado empregado, String tipo) throws Exception {
 
@@ -303,23 +371,36 @@ public class Facade {
         });
     }
 
+    /**
+     * Valida o identificador sindical e verifica se ele já está associado a outro empregado.
+     *
+     * @param idSindicato identificador sindical a validar
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     private void verificaIdSindicatoDisponivel(String idSindicato) throws Exception {
 
-            if (idSindicato == null || idSindicato.isEmpty()) {
-                throw new IdSindicatoNulo();
-            }
+        if (idSindicato == null || idSindicato.isEmpty()) {
+            throw new IdSindicatoNulo();
+        }
 
-            for (Empregado e : empregados.values()) {
-                if (e.isSindicalizado()) {
-                    Sindicato sindicato = e.getSindicato();
+        for (Empregado e : empregados.values()) {
+            if (e.isSindicalizado()) {
+                Sindicato sindicato = e.getSindicato();
 
-                    if (sindicato.getIdMembro().equals(idSindicato)) {
-                        throw new IdMembroRepetido();
-                    }
+                if (sindicato.getIdMembro().equals(idSindicato)) {
+                    throw new IdMembroRepetido();
                 }
             }
+        }
     }
 
+    /**
+     * Converte e valida o valor textual da taxa sindical.
+     *
+     * @param taxaSindical valor da taxa, aceitando vírgula ou ponto decimal
+     * @return valor numérico da taxa sindical
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     private double converteTaxaSindical(String taxaSindical)
             throws Exception {
 
@@ -402,6 +483,13 @@ public class Facade {
         });
     }
 
+    /**
+     * Converte e valida o valor textual da comissão.
+     *
+     * @param valor valor da comissão, aceitando vírgula ou ponto decimal
+     * @return valor numérico da comissão
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     private double converteComissao(String valor) throws Exception {
         if (valor == null || valor.isEmpty()) {
             throw new ComissaoNula();
@@ -421,6 +509,14 @@ public class Facade {
 
         return valorConvertido;
     }
+    /**
+     * Cria uma instância de empregado do tipo especificado, preservando os dados do empregado recebido.
+     *
+     * @param empregado empregado cujos dados serão usados
+     * @param tipo tipo de empregado desejado
+     * @return novo empregado do tipo solicitado
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     private Empregado criaEmpregadoPorTipo(
             Empregado empregado,
             String tipo,
@@ -589,6 +685,15 @@ public class Facade {
             return String.valueOf(horasTrabalhadas).replace(".", ",");
         }
     }
+    /**
+     * Calcula o total das taxas de serviço de um empregado sindicalizado no período informado.
+     *
+     * @param emp identificador do empregado
+     * @param dataInicial início do período no formato dia/mês/ano
+     * @param dataFinal fim do período no formato dia/mês/ano
+     * @return total das taxas de serviço com duas casas decimais
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     public String getTaxasServico(String emp, String dataInicial, String dataFinal) throws Exception {
         verificaSistemaAberto();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(java.time.format.ResolverStyle.STRICT);
@@ -663,6 +768,7 @@ public class Facade {
             empregados.clear();
             contadorId = 1;
             new File("banco.xml").delete();
+            AgendaPagamento.reiniciar();
         });
     }
     /**
@@ -670,21 +776,21 @@ public class Facade {
      * reescreve o arquivo banco.xml com o Map empregados e com o valor do contador
      */
     public void encerrarSistema() throws Exception {
-            try {
-                FileOutputStream f = new FileOutputStream("banco.xml");
-                XMLEncoder encoder = new XMLEncoder(f);
+        try {
+            FileOutputStream f = new FileOutputStream("banco.xml");
+            XMLEncoder encoder = new XMLEncoder(f);
 
-                encoder.writeObject(this.empregados);
-                encoder.writeObject(this.contadorId);
+            encoder.writeObject(this.empregados);
+            encoder.writeObject(this.contadorId);
 
-                encoder.close();
-                f.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            pilhaDesfazer.clear();
-            pilhaRefazer.clear();
-            encerrado = true;
+            encoder.close();
+            f.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        pilhaDesfazer.clear();
+        pilhaRefazer.clear();
+        encerrado = true;
     }
 
     /**
@@ -763,6 +869,14 @@ public class Facade {
     }
 
 
+    /**
+     * Registra uma taxa de serviço para um membro sindicalizado.
+     *
+     * @param membro identificador do membro sindicalizado
+     * @param data data da taxa
+     * @param valor valor da taxa de serviço
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     public void lancaTaxaServico(String membro, String data, String valor) throws Exception{
         executaComando(() -> {
             if (membro == null || membro.isEmpty()) {
@@ -908,6 +1022,13 @@ public class Facade {
         });
     }
 
+    /**
+     * Calcula o valor total da folha de pagamento para a data informada.
+     *
+     * @param dataString data de referência no formato dia/mês/ano
+     * @return valor total da folha formatado como texto
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     public String totalFolha(String dataString) throws Exception {
         verificaSistemaAberto();
         LocalDate data = converterData(dataString);
@@ -922,6 +1043,13 @@ public class Facade {
         return String.format(Locale.forLanguageTag("pt-BR"), "%.2f", total);
     }
 
+    /**
+     * Gera a folha de pagamento para a data informada e grava o conteúdo no arquivo de saída.
+     *
+     * @param dataString data de referência no formato dia/mês/ano
+     * @param saida caminho do arquivo no qual a folha será gravada
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
     public void rodaFolha(String dataString, String saida) throws Exception {
         executaComando(() -> {
             try {
@@ -940,5 +1068,15 @@ public class Facade {
                         "Erro ao salvar a folha: " + e.getMessage(), e);
             }
         });
+    }
+
+    /**
+     * Cria uma agenda de pagamentos com a descrição informada.
+     *
+     * @param descricao descrição da agenda de pagamentos
+     * @throws Exception se ocorrer um erro de validação ou execução da operação
+     */
+    public void criarAgendaDePagamentos(String descricao) throws Exception {
+        AgendaPagamento.criar(descricao);
     }
 }

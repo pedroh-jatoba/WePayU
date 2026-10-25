@@ -2,13 +2,13 @@
 <java version="19.0.2" class="java.beans.XMLDecoder">
  <object class="java.util.LinkedHashMap">
   <void method="put">
-   <string>2</string>
-   <object class="br.ufal.ic.p2.wepayu.models.EmpregadoComissionado">
-    <void property="comissao">
-     <double>0.05</double>
+   <string>1</string>
+   <object class="br.ufal.ic.p2.wepayu.models.EmpregadoHorista">
+    <void property="agendaPagamento">
+     <string>mensal 1</string>
     </void>
     <void property="endereco">
-     <string>Rua dos Bufoes, 333 - Campina Grande</string>
+     <string>Rua dos Jooes, 333 - Campina Grande</string>
     </void>
     <void property="metodoPagamento">
      <object class="br.ufal.ic.p2.wepayu.models.MetodoPagamento">
@@ -18,16 +18,16 @@
      </object>
     </void>
     <void property="nome">
-     <string>Gaiato Vendedor</string>
+     <string>Joao da Silva</string>
     </void>
-    <void property="salarioMensal">
-     <double>2300.0</double>
+    <void property="salarioPorHora">
+     <double>23.0</double>
     </void>
     <void property="tipo">
-     <string>comissionado</string>
+     <string>horista</string>
     </void>
    </object>
   </void>
  </object>
- <int>3</int>
+ <int>2</int>
 </java>
