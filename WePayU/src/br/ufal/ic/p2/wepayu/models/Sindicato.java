@@ -1,5 +1,6 @@
 package br.ufal.ic.p2.wepayu.models;
 
+import br.ufal.ic.p2.wepayu.Exception.AtributoInexistente;
 import br.ufal.ic.p2.wepayu.Exception.DataInicialPosterior;
 
 import java.time.LocalDate;
@@ -10,7 +11,7 @@ import java.util.List;
 public class Sindicato {
     private String idMembro;
     private double taxaSindical;
-    List<TaxaServico> taxasServicos = new ArrayList<>();
+    private List<TaxaServico> taxasServicos = new ArrayList<>();
 
     public Sindicato(){}
     public Sindicato(String idMembro, double taxaSindical){
@@ -56,9 +57,23 @@ public class Sindicato {
             LocalDate dataTaxa = LocalDate.parse(t.getData(), formatter);
             if ((dataTaxa.isEqual(inicio) || dataTaxa.isAfter(inicio)) && dataTaxa.isBefore(fim))
             {
-                taxa += t.getValor()/(taxaSindical);
+                taxa += t.getValor();
             }
         }
         return taxa;
+    }
+    public String getAtributo(String atributo) throws Exception {
+        switch (atributo) {
+            case "idSindicato":
+                return getIdMembro();
+
+            case "taxaSindical":
+                return String.format(
+                        "%.2f", getTaxaSindical()
+                ).replace(".", ",");
+
+            default:
+                throw new AtributoInexistente();
+        }
     }
 }

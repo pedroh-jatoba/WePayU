@@ -1,5 +1,6 @@
 package br.ufal.ic.p2.wepayu.models;
 
+
 import java.time.LocalDate;
 
 public class CartaoDePonto {

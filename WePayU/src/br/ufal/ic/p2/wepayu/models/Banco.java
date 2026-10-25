@@ -36,4 +36,21 @@ public class Banco extends MetodoPagamento{
     public void setContaCorrente(String contaCorrente) {
         this.contaCorrente = contaCorrente;
     }
+
+    @Override
+    public String getAtributo(String atributo) throws Exception {
+        switch (atributo) {
+            case "banco":
+                return getBanco();
+
+            case "agencia":
+                return getAgencia();
+
+            case "contaCorrente":
+                return getContaCorrente();
+
+            default:
+                return super.getAtributo(atributo);
+        }
+    }
 }

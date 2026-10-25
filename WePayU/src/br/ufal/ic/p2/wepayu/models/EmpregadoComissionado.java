@@ -1,6 +1,7 @@
 package br.ufal.ic.p2.wepayu.models;
 
-import br.ufal.ic.p2.wepayu.Exception.DataInicialPosterior;
+import br.ufal.ic.p2.wepayu.Exception.*;
+
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -20,10 +21,18 @@ public class EmpregadoComissionado extends Empregado{
         this.salarioMensal = salarioMensal;
         this.comissao = comissao;
     }
-    public EmpregadoComissionado(Empregado empregado, double salarioMensal, double comissao){
+    public EmpregadoComissionado(Empregado empregado, double comissao){
         super(empregado);
-        this.salarioMensal = salarioMensal;
+        this.setTipo("comissionado");
+        this.salarioMensal = empregado.getSalarioAtual();
         this.comissao = comissao;
+    }
+
+    public EmpregadoComissionado(Empregado empregado) {
+        super(empregado);
+        this.setTipo("comissionado");
+        this.salarioMensal = empregado.getSalarioAtual();
+        this.comissao = 0.0;
     }
 
     public double getVendasRealizadas(LocalDate inicio, LocalDate fim){
@@ -34,7 +43,7 @@ public class EmpregadoComissionado extends Empregado{
         for (ResultadoDeVenda v : vendas){
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
             LocalDate dataCartao = LocalDate.parse(v.getData(), formatter);
-            if ((dataCartao.isEqual(inicio) || dataCartao.isAfter(inicio)) && dataCartao.isBefore(fim))
+            if ((!dataCartao.isBefore(inicio)) && dataCartao.isBefore(fim))
             {
                 valorVendas += v.getValor();
             }
@@ -69,4 +78,64 @@ public class EmpregadoComissionado extends Empregado{
     public void setVendas(List<ResultadoDeVenda> vendas) {
         this.vendas = vendas;
     }
+
+    @Override
+    public String getAtributo(String atributo) throws Exception {
+        switch (atributo) {
+            case "salario":
+                return String.format(
+                        "%.2f",
+                        getSalarioMensal()
+                ).replace(".", ",");
+
+            case "comissao":
+                return String.format(
+                        "%.2f",
+                        getComissao()
+                ).replace(".", ",");
+
+            default:
+                return super.getAtributo(atributo);
+        }
+    }
+    @Override
+    public void alteraAtributo(String atributo, String valor)
+            throws Exception {
+
+        if ("comissao".equals(atributo)) {
+            setComissao(converteComissao(valor));
+            return;
+        }
+
+        super.alteraAtributo(atributo, valor);
+    }
+    @Override
+    public double getSalarioAtual() {
+        return getSalarioMensal();
+    }
+    @Override
+    public void alteraSalario(String valor) throws Exception {
+        if (valor == null || valor.isEmpty()) {
+            throw new SalarioNulo();
+        }
+
+        double salario;
+
+        try {
+            salario = Double.parseDouble(valor.replace(",", "."));
+        } catch (NumberFormatException e) {
+            throw new SalarioNaoNumerico();
+        }
+
+        if (salario < 0) {
+            throw new SalarioNegativo();
+        }
+
+        setSalarioMensal(salario);
+    }
+
+    public double getSalarioQuinzenal() {
+        return getSalarioMensal() * 12.0 / 52.0 * 2.0;
+    }
+
 }
